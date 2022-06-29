@@ -1,0 +1,216 @@
+package infosys;
+
+import static org.testng.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import org.testng.asserts.SoftAssert;
+
+public class Chemical {
+	WebDriver driver;
+	SoftAssert  assertion = new SoftAssert();
+	
+	@BeforeMethod
+	public void setUp() throws Exception {
+	System.setProperty ("webdriver.chrome.driver","C:\\IVS Files\\Selenium\\Drivers\\chromedriver v2.43\\chromedriver .exe");
+	driver = new ChromeDriver();
+	driver.get("http://10.82.180.36:81/Automation/8lood%20Donation&20Camp/Home.aspx");
+	driver.manage().window().maximize();
+	driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+	}
+	
+	@DataProvider(name = "logindata")
+
+	public Object[][] getData() {
+	return new Object[][] { { "JohnPiper", "john1234" } };
+	}
+	
+	@Test (dataProvider="logindata", priority=8)
+	public void Login(String username, String Password) throws Exception {
+	driver.findElement (By.linkText("Login")).click();
+	Thread.sleep(3000);
+	driver.findElement(By.xpath("//*[@id=\"txtUsername\"]")).sendKeys(username);
+	Thread.sleep(3000);
+	driver.findElement(By.xpath("//*[@id=\"txtPassword\"]")).sendKeys (Password);
+	Thread.sleep(3000);
+	String actMsg = driver.findElement(By.id("btnSubmit")).getText();
+	Thread.sleep(3000);
+	String expMsg = "Successful login! !!";
+//	assertion.assert.assertTrue(actMsg.equals(expMsg), "Login Successfull");
+	assertion.assertTrue(actMsg.equals(expMsg), "Login Successfull");
+	Thread.sleep(3000);
+	
+	}
+	
+	
+	
+
+	@Test(dependsOnMethods = {"Login"} )
+	public void organizeEvents() throws Exception {
+		driver.findElement(By.linkText("Organize Events")).click();
+		Thread.sleep(3000);
+		
+		FileInputStream file = new FileInputStream(new File ("Desktop\\University List.xlsx"));
+		XSSFWorkbook Workbook = new XSSFWorkbook(file);
+		XSSFSheet Sheet = Workbook.getSheet("Sheet1");
+		int a = Sheet.getLastRowNum();
+		
+		for(int i=1;i<=a;i++) {
+		driver.findElement(By.xpath("//*[]@id=\"txtName\"]")).sendKeys(Sheet.getRow(i).getCell(5).getStringCellValue())	;
+		Thread.sleep(3000);
+		driver.findElement(By.xpath("//*[]@id=\"txtEmailId\"]")).sendKeys(Sheet.getRow(i).getCell(1).getStringCellValue());
+		Thread.sleep(3000);
+		driver.findElement(By.xpath("//*[]@id=\"txtMobileNumber\"]")).sendKeys(Sheet.getRow(i).getCell(2).getStringCellValue())	;
+		Thread.sleep(3000);
+		
+		WebElement element1 = driver.findElement(By.xpath("//*[]@id=\"dd1CurrentState\"]"));
+		Select ddr1 = new Select(element1);
+		ddr1.selectByVisibleText(Sheet.getRow(i).getCell(3).getStringCellValue());
+		Thread.sleep(3000);
+		
+		WebElement element2 = driver.findElement(By.xpath("//*[]@id=\"dd1CurrentCity\"]"));
+		Select ddr2 = new Select(element2);
+		ddr1.selectByVisibleText(Sheet.getRow(i).getCell(4).getStringCellValue());
+		Thread.sleep(3000);
+		
+		driver.findElement(By.xpath("//*[]@id=\"txtVenue\"]")).sendKeys(Sheet.getRow(i).getCell(5).getStringCellValue());
+		Thread.sleep(3000);
+		
+		WebElement element3 = driver.findElement(By.xpath("//*[]@id=\"dd1TypeOfActivity\"]"));
+		Select ddr3 = new Select(element3);
+		ddr1.selectByVisibleText(Sheet.getRow(i).getCell(6).getStringCellValue());
+		Thread.sleep(3000);
+		
+		driver.findElement(By.xpath("//*[]@id=\"txtType\"]")).sendKeys(Sheet.getRow(i).getCell(7).getRawValue());
+		Thread.sleep(3000);
+		
+		driver.findElement(By.xpath("//*[]@id=\"txtAdditionalComments\"]")).sendKeys(Sheet.getRow(i).getCell(8).getStringCellValue());
+		Thread.sleep(3000);
+		
+		driver.findElement(By.xpath("//*[]@id=\"btnSubmit\"]")).click();
+		Thread.sleep(3000);
+		
+		String output = driver.findElement(By.xpath("//*[@id=\"1blSuccessMessage\"]")).getText();
+		System.out.println(output);
+		Thread.sleep(3000);
+		}
+	}
+		
+		@Test(dependsOnMethods = {"organizeEvents"} )
+		public void Myths() throws IOException, InterruptedException {
+			driver.findElement(By.xpath("//*[@id=\"forml\"]/div[3]/div/div[2]/ul/li[6]/a")).click();
+			Thread.sleep(3000);
+	
+		File img= ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+		FileUtils.copyFile(img, new File("Desktop\\image.png"));
+		
+		}
+		
+		@AfterClass
+		public void tearDown() {
+			driver.close();
+			driver.quit();
+		}
+  
+}
+
+
+
+
+
+
+############################ Chemical ###################################################
+
+Feature: ChemicalStore Application
+
+  @AddChemicals
+  Scenario Outline: using scenario outline for parameters
+    When open URL AND click on login button and enter detials "admin" and password "infyi23"
+    Then add the chemical details "<Type of Chemicals>" then "<Chemical name>" then "<Chemical Abstract Service wumber>" and "<available quantity in grams>"
+    And close the browser
+
+    Examples: 
+      | Type of Chemicals | Chemical Wame | Chemical Abstract Service Number | Available quantity in grams |
+      | Non Toxic         | Sulphur       |                       9012345678 |                         288 |
+
+
+
+
+
+package chemicalStore;
+
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
+
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import io.github.bonigarcia.wdm.WebDriverManager;
+
+public class AddChemicals {
+	WebDriver driver;
+	@When ("^Open URL AND click on login button and enter detials \"admin\" and password \"infyi23\"$")
+	public void Open_URL_AND_click_on_login_button_and_enter_detials_and_password(String arg1, String arg2) throws Throwable {
+		
+		WebDriverManager.chromiumdriver().setup();
+		driver = new ChromeDriver();
+		driver.get("http://18.82.188.36:81/Automation/ChemicalStore/sample.htm");
+		driver.manage().window().maximize();
+		driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+		
+		driver.findElement(By.linkText("Login")).click();
+		Thread.sleep(1000);
+		
+		driver.findElement(By.xpath("//*[@id=\"uname\")]")).sendKeys(arg1);
+		driver.findElement(By.xpath("//*[@id=\"pas\")]")).sendKeys(arg2);
+		driver.findElement(By.xpath("//*[@id=\"addc\")]")).click();
+		Thread.sleep(1000);
+	}
+	
+	@Then("^add the chemical details \"<Type of Chemicals>\" then \"<Chemical name>\" then \"<Chemical Abstract Service wumber>\" and \"<available quantity in grams>\"$")
+	public void add_the_chemical_details_then_then_and(String arg1, String arg2, String arg3, String arg4) throws Throwable {
+		driver.findElement(By.linkText("Add Chemicals")).click();
+		Thread.sleep(1000);
+		
+		WebElement element1 = driver.findElement(By.xpath("//*[@id=\"tc\"]"));
+		Select ddr1 = new Select(element1);
+		ddr1.selectByVisibleText(arg1);
+		driver.findElement(By.xpath("//*[@id=\"cname\")]")).sendKeys(arg2);
+		driver.findElement(By.xpath("//*[@id=\"cno\")]")).sendKeys(arg3);
+		driver.findElement(By.xpath("//*[@id=\"cqun\")]")).sendKeys(arg4);
+		Thread.sleep(1000);
+		driver.findElement(By.id("addc")).click();
+		Thread.sleep(3000);
+		
+	}
+	
+	@Then("^close the browser$")
+	public void close_the_browser() {
+		driver.close();
+		driver.quit();
+		
+	}
+
+}
